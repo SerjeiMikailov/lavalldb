@@ -1,132 +1,101 @@
 #include <iostream>
+#include <map>
+#include <string>
 #include <sqlite3.h>
+
+using namespace std;
 
 static int callback(void *NotUsed, int argc, char **argv, char **azColName)
 {
     for (int i = 0; i < argc; i++)
     {
-        std::cout << azColName[i] << ": " << (argv[i] ? argv[i] : "NULL") << std::endl;
+        cout << azColName[i] << ": " << (argv[i] ? argv[i] : "NULL") << endl;
     }
     return 0;
 }
 
-int get_next_id(sqlite3 *db)
+void create_table(sqlite3 *db)
 {
-    const char *sql = "SELECT MAX(ID) FROM Data;";
-    sqlite3_stmt *stmt;
-    int nextID = 1;
+    const char *createTableSQL = "CREATE TABLE IF NOT EXISTS Data (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL, Age INT NOT NULL, Occupation TEXT);";
 
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, 0) == SQLITE_OK)
-    {
-        if (sqlite3_step(stmt) == SQLITE_ROW)
-        {
-            nextID = sqlite3_column_int(stmt, 0) + 1;
-        }
-        sqlite3_finalize(stmt);
-    }
-
-    return nextID;
-}
-
-void register_data(const char *Name, int Age)
-{
-    sqlite3 *db;
     char *zErrMsg = 0;
-    int rc;
-
-    rc = sqlite3_open("../database.db", &db);
-
-    if (rc)
-    {
-        std::cout << "Error opening the database: " << sqlite3_errmsg(db) << std::endl;
-        sqlite3_close(db);
-        return;
-    }
-
-    const char *createTableSQL = "CREATE TABLE IF NOT EXISTS Data (ID INTEGER PRIMARY KEY AUTOINCREMENT, Name TEXT NOT NULL, Age INT NOT NULL);";
-
-    rc = sqlite3_exec(db, createTableSQL, callback, 0, &zErrMsg);
+    int rc = sqlite3_exec(db, createTableSQL, callback, 0, &zErrMsg);
 
     if (rc != SQLITE_OK)
     {
-        std::cout << "Error creating table: " << sqlite3_errmsg(db) << std::endl;
+        cout << "Error creating table: " << sqlite3_errmsg(db) << endl;
         sqlite3_free(zErrMsg);
-        sqlite3_close(db);
-        return;
-    }
-
-    const char *sql = "INSERT INTO Data (Name, Age) VALUES (?, ?);";
-    sqlite3_stmt *stmt;
-    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
-
-    if (rc != SQLITE_OK)
-    {
-        std::cout << "Error preparing SQL statement: " << sqlite3_errmsg(db) << std::endl;
-        sqlite3_close(db);
-        return;
-    }
-
-    sqlite3_bind_text(stmt, 1, Name, -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 2, Age);
-
-    rc = sqlite3_step(stmt);
-
-    if (rc != SQLITE_DONE)
-    {
-        std::cout << "Error inserting data: " << sqlite3_errmsg(db) << std::endl;
     }
     else
     {
-        std::cout << "Data inserted successfully." << std::endl;
+        cout << "Table created successfully." << endl;
     }
-
-    sqlite3_finalize(stmt);
-    sqlite3_close(db);
 }
 
-
-void delete_data(int ID)
+void register_data(const map<string, string>& columnData)
 {
     sqlite3 *db;
     char *zErrMsg = 0;
     int rc;
 
-    rc = sqlite3_open("../database.db", &db);
+    rc = sqlite3_open("database.db", &db);
 
     if (rc)
     {
-        std::cout << "Error opening the database: " << sqlite3_errmsg(db) << std::endl;
+        cout << "Error opening the database: " << sqlite3_errmsg(db) << endl;
         sqlite3_close(db);
         return;
     }
-    else
-    {
-        std::cout << "Database opened successfully." << std::endl;
-    }
 
-    const char *sql = "DELETE FROM Data WHERE ID = ?;";
+    create_table(db);
+
+    // Montar a consulta SQL dinamicamente com base nos nomes das colunas
+    string columns;
+    string placeholders;
+    for (const auto& pair : columnData)
+    {
+        columns += pair.first + ", ";
+        placeholders += "?, ";
+    }
+    // Remover a vírgula extra no final das strings columns e placeholders
+    columns = columns.substr(0, columns.length() - 2);
+    placeholders = placeholders.substr(0, placeholders.length() - 2);
+
+    string sql = "INSERT INTO Data (" + columns + ") VALUES (" + placeholders + ");";
 
     sqlite3_stmt *stmt;
-    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+    rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, 0);
 
     if (rc != SQLITE_OK)
     {
-        std::cout << "Error preparing SQL statement: " << sqlite3_errmsg(db) << std::endl;
+        cout << "Error preparing SQL statement: " << sqlite3_errmsg(db) << endl;
         sqlite3_close(db);
         return;
     }
 
-    sqlite3_bind_int(stmt, 1, ID);
+    // Bind dos valores aos placeholders
+    int i = 1;
+    for (const auto& pair : columnData)
+    {
+        rc = sqlite3_bind_text(stmt, i++, pair.second.c_str(), -1, SQLITE_STATIC);
+        if (rc != SQLITE_OK)
+        {
+            cout << "Error binding parameter: " << sqlite3_errmsg(db) << endl;
+            sqlite3_finalize(stmt);
+            sqlite3_close(db);
+            return;
+        }
+    }
 
     rc = sqlite3_step(stmt);
 
     if (rc != SQLITE_DONE)
     {
-        std::cout << "Error deleting data: " << sqlite3_errmsg(db) << std::endl;
+        cout << "Error inserting data: " << sqlite3_errmsg(db) << endl;
     }
     else
     {
-        std::cout << "Data deleted successfully." << std::endl;
+        cout << "Data inserted successfully." << endl;
     }
 
     sqlite3_finalize(stmt);

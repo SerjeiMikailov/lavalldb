@@ -1,9 +1,15 @@
-#include "Ldb.hpp"
+//#include "Ldb.hpp"
+#include "../include/lavalldb.hpp"
 
 int main()
 {
-  register_data("Augustus", 890);
-  delete_data(1);
+    map<string, string> columnData;
+    columnData["Name"] = "John Doe";
+    columnData["Age"] = "30";
+    columnData["Occupation"] = "Engineer";
 
-  return 0;
+    register_data(columnData);
+
+    return 0;
 }
+
