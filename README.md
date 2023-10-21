@@ -1,6 +1,13 @@
 # Lavall.db
 
-### Simple Database based in SQLite3
+### Simple Database Lib based in SQLite3
+
+---------------------
+
+Single Header lib
+You can just include the single "lavalldb.hpp" in your file and compile.
+
+---------------------
 
 --> The DB gens a Database.db file
 
