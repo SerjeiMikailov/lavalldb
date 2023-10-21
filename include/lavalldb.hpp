@@ -136,3 +136,51 @@ void register_data(const map<string, string>& columnData)
     sqlite3_finalize(stmt);
     sqlite3_close(db);
 }
+
+void delete_data(int ID)
+{
+    sqlite3 *db;
+    char *zErrMsg = 0;
+    int rc;
+
+    rc = sqlite3_open("../database.db", &db);
+
+    if (rc)
+    {
+        std::cout << "Error opening the database: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_close(db);
+        return;
+    }
+    else
+    {
+        std::cout << "Database opened successfully." << std::endl;
+    }
+
+    const char *sql = "DELETE FROM Data WHERE ID = ?;";
+
+    sqlite3_stmt *stmt;
+    rc = sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
+
+    if (rc != SQLITE_OK)
+    {
+        std::cout << "Error preparing SQL statement: " << sqlite3_errmsg(db) << std::endl;
+        sqlite3_close(db);
+        return;
+    }
+
+    sqlite3_bind_int(stmt, 1, ID);
+
+    rc = sqlite3_step(stmt);
+
+    if (rc != SQLITE_DONE)
+    {
+        std::cout << "Error deleting data: " << sqlite3_errmsg(db) << std::endl;
+    }
+    else
+    {
+        std::cout << "Data deleted successfully." << std::endl;
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+}
