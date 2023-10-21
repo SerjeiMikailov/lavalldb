@@ -5,6 +5,27 @@
 
 using namespace std;
 
+
+/*
+
+
+    ---> To run with success you will need: SQLite3
+
+    Install:
+
+    Windows: "choco install sqlite" (With Chocolatey)
+    Or
+    https://www.sqlite.org/download.html
+
+    Arch Linux:
+    sudo pacman -S sqlite
+
+    Ubuntu:
+    sudo apt install sqlite3
+
+*/
+
+
 // Callback function to display query results
 static int callback(void *NotUsed, int argc, char **argv, char **azColName)
 {
