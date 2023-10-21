@@ -2,8 +2,8 @@
 
 int main()
 {
-    register_data(1, "hhh", 12);
-    register_data(4, "ggg", 13);
+  register_data("Augustus", 890);
+  delete_data(1);
 
-    return 0;
+  return 0;
 }
