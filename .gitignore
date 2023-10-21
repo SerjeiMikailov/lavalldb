@@ -1,6 +1,10 @@
 main
 
+/build/*
+
 app
+
+.vscode
 
 *.db
 
